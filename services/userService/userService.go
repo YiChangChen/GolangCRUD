@@ -2,15 +2,21 @@ package userservice
 
 import (
 	"fmt"
+	"log"
 
 	"crud.com/crud/model"
+	sqlservice "crud.com/crud/services/sqlService"
 )
 
 type UserService struct {
 }
 
 func (svc *UserService) CreateUser(in *model.User) {
-	fmt.Printf("add %s \n", in.Username)
+	sqlSvc := new(sqlservice.MsSql)
+	_, err := sqlSvc.CreateUser(in)
+	if err != nil {
+		log.Fatal("Error creating UserProfile: ", err.Error())
+	}
 }
 
 func (svc *UserService) UpdateUser(in *model.User) {
