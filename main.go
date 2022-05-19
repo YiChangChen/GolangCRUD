@@ -18,7 +18,6 @@ func main() {
 	server.GET("/:id", GetUser)
 	server.POST("/create", CreateUser)
 	server.PUT("/update", UpdateUser)
-	server.PATCH("/modify", ModifyUser)
 	server.DELETE("/delete", DeleteUser)
 
 	server.Run(":8080")
@@ -42,7 +41,12 @@ func GetUser(c *gin.Context) {
 	}
 
 	svc := new(userservice.UserService)
-	svc.GetUser(data)
+	result, err := svc.GetUser(data)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{"error": 9999})
+		return
+	}
+	c.JSON(http.StatusOK, result)
 }
 
 func CreateUser(c *gin.Context) {
@@ -67,18 +71,6 @@ func UpdateUser(c *gin.Context) {
 
 	svc := new(userservice.UserService)
 	svc.UpdateUser(data)
-}
-
-func ModifyUser(c *gin.Context) {
-	var data = new(model.User)
-
-	if c.ShouldBindJSON(&data) != nil {
-		c.JSON(http.StatusOK, gin.H{"error": 9999})
-		return
-	}
-
-	svc := new(userservice.UserService)
-	svc.ModifyUser(data)
 }
 
 func DeleteUser(c *gin.Context) {

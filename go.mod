@@ -4,6 +4,8 @@ go 1.18
 
 require github.com/gin-gonic/gin v1.7.7
 
+require github.com/jmoiron/sqlx v1.3.5 // indirect
+
 require (
 	github.com/denisenkom/go-mssqldb v0.12.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
