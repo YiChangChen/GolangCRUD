@@ -7,13 +7,13 @@ import (
 	"fmt"
 
 	"crud.com/crud/infrastructures/database"
-	"crud.com/crud/model"
+	"crud.com/crud/models"
 )
 
 type MsSql struct {
 }
 
-func (svc *MsSql) GetUser(in *model.User) (*model.User, error) {
+func (svc *MsSql) GetUser(in string) (*models.User, error) {
 	var err error
 	err = database.OpenConnection()
 	if err != nil {
@@ -38,8 +38,8 @@ func (svc *MsSql) GetUser(in *model.User) (*model.User, error) {
 			 WHERE Id = @Id
 	`
 
-	var result model.User
-	err = database.Db.Get(&result, tsql, sql.Named("Id", in.ID))
+	var result models.User
+	err = database.Db.Get(&result, tsql, sql.Named("Id", in))
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func (svc *MsSql) GetUser(in *model.User) (*model.User, error) {
 	return &result, nil
 }
 
-func (svc *MsSql) CreateUser(model *model.User) (int64, error) {
+func (svc *MsSql) CreateUser(model *models.User) (int64, error) {
 	var err error
 	err = database.OpenConnection()
 	if err != nil {
@@ -87,7 +87,7 @@ func (svc *MsSql) CreateUser(model *model.User) (int64, error) {
 	return result.RowsAffected()
 }
 
-func (svc *MsSql) UpdateUser(model *model.User) (int64, error) {
+func (svc *MsSql) UpdateUser(model *models.User) (int64, error) {
 	var err error
 	err = database.OpenConnection()
 	if err != nil {
@@ -127,7 +127,7 @@ func (svc *MsSql) UpdateUser(model *model.User) (int64, error) {
 	return result.RowsAffected()
 }
 
-func (svc *MsSql) DeleteUser(model *model.User) (int64, error) {
+func (svc *MsSql) DeleteUser(model *models.User) (int64, error) {
 	var err error
 	err = database.OpenConnection()
 	if err != nil {
