@@ -22,6 +22,36 @@ definitions:
 info:
   contact: {}
 paths:
+  /sso:
+    post:
+      consumes:
+      - application/json
+      description: sso
+      parameters:
+      - description: sso
+        in: body
+        name: user
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      summary: Sso
+      tags:
+      - user
   /user/{id}:
     get:
       consumes:
