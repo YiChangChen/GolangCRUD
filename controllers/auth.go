@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"crud.com/crud/models"
@@ -85,28 +86,65 @@ func (c *Controller) Sso(ctx *gin.Context) {
 	return
 }
 
-func CheckToken() {
-	// sample token string taken from the New example
-	tokenString := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmb28iOiJiYXIiLCJuYmYiOjE0NDQ0Nzg0MDB9.u1riaD1rW97opCoAuRCTy4w58Br-Zk-bh7vLiRIsrpU"
+// validate JWT
+func (c *Controller) AuthRequired(ctx *gin.Context) {
+	auth := ctx.GetHeader("Authorization")
+	if auth == "" {
+		ctx.AbortWithError(http.StatusUnauthorized, errors.New("Unauthorized"))
+		return
+	}
+	splitAuthorization := strings.SplitN(auth, "Bearer ", 2)
+	if len(splitAuthorization) != 2 {
+		ctx.AbortWithError(http.StatusUnauthorized, errors.New("Unauthorized"))
+		return
+	}
+	token := strings.Split(auth, "Bearer ")[1]
 
-	// Parse takes the token string and a function for looking up the key. The latter is especially
-	// useful if you use multiple keys for your application.  The standard is to use 'kid' in the
-	// head of the token to identify which key to use, but the parsed token (head and claims) is provided
-	// to the callback, providing flexibility.
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		// Don't forget to validate the alg is what you expect:
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-		}
-
-		// hmacSampleSecret is a []byte containing your secret, e.g. []byte("my_secret_key")
+	// parse and validate token for six things:
+	// validationErrorMalformed => token is malformed
+	// validationErrorUnverifiable => token could not be verified because of signing problems
+	// validationErrorSignatureInvalid => signature validation failed
+	// validationErrorExpired => exp validation failed
+	// validationErrorNotValidYet => nbf validation failed
+	// validationErrorIssuedAt => iat validation failed
+	tokenClaims, err := jwt.ParseWithClaims(token, &models.Claims{}, func(token *jwt.Token) (i interface{}, err error) {
 		return jwtSecret, nil
 	})
 
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		fmt.Println(claims["foo"], claims["nbf"])
+	if err != nil {
+		var message string
+		if ve, ok := err.(*jwt.ValidationError); ok {
+			if ve.Errors&jwt.ValidationErrorMalformed != 0 {
+				message = "token is malformed"
+			} else if ve.Errors&jwt.ValidationErrorUnverifiable != 0 {
+				message = "token could not be verified because of signing problems"
+			} else if ve.Errors&jwt.ValidationErrorSignatureInvalid != 0 {
+				message = "signature validation failed"
+			} else if ve.Errors&jwt.ValidationErrorExpired != 0 {
+				message = "token is expired"
+			} else if ve.Errors&jwt.ValidationErrorNotValidYet != 0 {
+				message = "token is not yet valid before sometime"
+			} else {
+				message = "can not handle this token"
+			}
+		}
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"error": message,
+		})
+		ctx.Abort()
+		return
+	}
+
+	if claims, ok := tokenClaims.Claims.(*models.Claims); ok && tokenClaims.Valid {
+		fmt.Println(claims)
+		fmt.Println("account:", claims.Account)
+		fmt.Println("role:", claims.Role)
+		ctx.Set("account", claims.Account)
+		ctx.Set("role", claims.Role)
+		ctx.Next()
 	} else {
-		fmt.Println(err)
+		ctx.Abort()
+		return
 	}
 }
 

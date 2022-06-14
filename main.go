@@ -30,8 +30,8 @@ func main() {
 	v1 := router.Group("api/v1")
 	{
 		user := v1.Group("/user")
+		user.Use(c.AuthRequired)
 		{
-			user.Group("/user")
 			user.GET("/:id", c.GetUser)
 			user.POST("/create", c.CreateUser)
 			user.PUT("/update", c.UpdateUser)
