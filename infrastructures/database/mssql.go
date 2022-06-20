@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
@@ -14,9 +15,18 @@ var user = ""
 var password = ""
 var database = "GoDb"
 
-var Db *sqlx.DB
+// var Db *sqlx.DB
 
-func OpenConnection() error {
+type MsSql struct {
+	Db  *sqlx.DB
+	Ctx context.Context
+}
+
+func NewMsSql() *MsSql {
+	return &MsSql{}
+}
+
+func (c *MsSql) OpenConnection() error {
 	// Build connection string
 	// connString := fmt.Sprintf("server=%s;database=%s;trusted_connection=yes", server, database)
 	connString := "server=localhost;database=GoDb;integrated security=SSPI;"
@@ -24,12 +34,13 @@ func OpenConnection() error {
 
 	// Create connection pool
 
-	Db, err = sqlx.Connect("sqlserver", connString) //sql.Open("sqlserver", connString)
+	c.Db, err = sqlx.Connect("sqlserver", connString) //sql.Open("sqlserver", connString)
 	if err != nil {
 		fmt.Printf("Error creating connection pool: %s \n", err.Error())
 	}
-	ctx := context.Background()
-	err = Db.PingContext(ctx)
+
+	c.Ctx = context.Background()
+	err = c.Db.PingContext(c.Ctx)
 	if err != nil {
 		fmt.Printf("Error connection: %s \n", err.Error())
 	}
@@ -37,10 +48,31 @@ func OpenConnection() error {
 	return err
 }
 
-func CloseConnection() error {
-	err := Db.Close()
+func (c *MsSql) CloseConnection() error {
+	err := c.Db.Close()
 	if err != nil {
 		fmt.Printf("Error close db connection %s \n", err.Error())
 	}
 	return err
+}
+
+func (c *MsSql) CheckConnect() error {
+	var err error
+	err = c.OpenConnection()
+	if err != nil {
+		return err
+	}
+
+	if c.Db == nil {
+		err = errors.New("GoDb: db is null")
+		return err
+	}
+
+	c.Ctx = context.Background()
+
+	err = c.Db.PingContext(c.Ctx)
+	if err != nil {
+		return err
+	}
+	return nil
 }

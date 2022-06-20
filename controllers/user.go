@@ -23,14 +23,18 @@ func (c *Controller) GetUser(ctx *gin.Context) {
 	id := ctx.Param("id")
 	_, err := strconv.Atoi(id)
 	if err != nil {
-		ctx.JSON(http.StatusOK, gin.H{"error": 9999})
+		res := models.Result{
+			IsSuccess:     false,
+			ReturnCode:    models.ModelInValid,
+			ReturnMessage: "ModelInValid",
+		}
+		ctx.JSON(http.StatusOK, res)
 		return
 	}
-
-	svc := new(userservice.UserService)
+	svc := userservice.NewUserService()
 	result, err := svc.GetUser(id)
 	if err != nil {
-		ctx.JSON(http.StatusOK, gin.H{"error": 9999})
+		ctx.JSON(http.StatusOK, gin.H{"error": err.Error()})
 		return
 	}
 	ctx.JSON(http.StatusOK, result)
@@ -50,12 +54,22 @@ func (c *Controller) CreateUser(ctx *gin.Context) {
 	var data = new(models.User)
 
 	if ctx.ShouldBindJSON(&data) != nil {
-		ctx.JSON(http.StatusOK, gin.H{"error": 9999})
+		res := models.Result{
+			IsSuccess:     false,
+			ReturnCode:    models.ModelInValid,
+			ReturnMessage: "ModelInValid",
+		}
+		ctx.JSON(http.StatusOK, res)
 		return
 	}
 
-	svc := new(userservice.UserService)
-	svc.CreateUser(data)
+	svc := userservice.NewUserService()
+	result, err := svc.CreateUser(data)
+	if err != nil {
+		ctx.JSON(http.StatusOK, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, result)
 }
 
 // @Summary 更新user
@@ -72,12 +86,22 @@ func (c *Controller) UpdateUser(ctx *gin.Context) {
 	var data = new(models.User)
 
 	if ctx.ShouldBindJSON(&data) != nil {
-		ctx.JSON(http.StatusOK, gin.H{"error": 9999})
+		res := models.Result{
+			IsSuccess:     false,
+			ReturnCode:    models.ModelInValid,
+			ReturnMessage: "ModelInValid",
+		}
+		ctx.JSON(http.StatusOK, res)
 		return
 	}
 
-	svc := new(userservice.UserService)
-	svc.UpdateUser(data)
+	svc := userservice.NewUserService()
+	result, err := svc.UpdateUser(data)
+	if err != nil {
+		ctx.JSON(http.StatusOK, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, result)
 }
 
 // @Summary 刪除user
@@ -94,10 +118,20 @@ func (c *Controller) DeleteUser(ctx *gin.Context) {
 	var data = new(models.User)
 
 	if ctx.ShouldBindJSON(&data) != nil {
-		ctx.JSON(http.StatusOK, gin.H{"error": 9999})
+		res := models.Result{
+			IsSuccess:     false,
+			ReturnCode:    models.ModelInValid,
+			ReturnMessage: "ModelInValid",
+		}
+		ctx.JSON(http.StatusOK, res)
 		return
 	}
 
-	svc := new(userservice.UserService)
-	svc.DeleteUser(data)
+	svc := userservice.NewUserService()
+	result, err := svc.DeleteUser(data)
+	if err != nil {
+		ctx.JSON(http.StatusOK, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, result)
 }
